@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Utility for SSH tunnels"""
+
+import argparse
+import os
+import sys
+import logging
+
+from tunnel import TunnelManager
+
+logging.basicConfig()
+LOGGER = logging.getLogger(__name__)
+
+def get_arguments():
+    """Fetch the optional command-line arguments for interactive execution"""
+    parser = argparse.ArgumentParser(description="SSH tunnel manager")
+    action = parser.add_subparsers(dest='action')
+    establish = action.add_parser('establish',
+                                      conflict_handler="resolve",
+                                      help='Establish an SSH tunnel')
+    establish.add_argument('-h', '--host',
+                              help='host to connect to',
+                              required=True)
+    establish.add_argument('-p', '--port',
+                              help='port to establish proxy on',
+                              required=True)
+    establish.add_argument('-u', '--user',
+                              help='user to connect as',
+                              required=True)
+    establish.add_argument('-c', '--credential',
+                              help='user private key, password, or private key path',
+                              required=True)
+    teardown = action.add_parser('teardown',
+                                      conflict_handler="resolve",
+                                      help='Teardown an established SSH tunnel')
+    teardown.add_argument('-h', '--host',
+                              help='host of tunnel to teardown',
+                              required=True)
+
+    if len(sys.argv) <= 1:
+        parser.print_help()
+        parser.exit()
+
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    args = get_arguments()
+    port = None
+    if hasattr(args, "port"):
+      port = args.port
+
+    manager = TunnelManager(args.host, port)
+    if args.action in 'establish':
+      credential = args.credential
+      if os.path.exists(credential):
+        with open(args.credential, 'r') as identity_file:
+          credential = identity_file.read()
+      manager.establish(args.user, credential)
+    elif args.action in 'teardown':
+      manager.teardown()
+
+if __name__ == "__main__":
+    main()
