@@ -1,3 +1,4 @@
+```
 usage: tunnel [-h] {establish,teardown} ...
 
 SSH tunnel manager
@@ -9,3 +10,4 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
+```
